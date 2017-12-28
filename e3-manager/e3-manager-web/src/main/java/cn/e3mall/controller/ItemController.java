@@ -10,12 +10,13 @@ import cn.e3mall.pojo.TbItem;
 import cn.e3mall.service.ItemService;
 
 @Controller
+@RequestMapping("item")
 public class ItemController {
 	
 	@Autowired
 	private ItemService itemService;
 	
-	@RequestMapping("item/{id}")
+	@RequestMapping("{id}")
 	@ResponseBody
 	public TbItem getItemById(@PathVariable long id){
 		return itemService.getItemById(id);
