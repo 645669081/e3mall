@@ -11,7 +11,9 @@
 
 
 	<context:component-scan base-package="cn.e3mall.controller" />
+	
 	<mvc:annotation-driven />
+	
 	<bean
 		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 		<property name="prefix" value="/WEB-INF/jsp/" />
@@ -25,6 +27,7 @@
 	<dubbo:application name="e3-manager-web"/>
 	<dubbo:registry protocol="zookeeper" address="192.168.239.128:2181"/>
 	<dubbo:reference interface="cn.e3mall.service.ItemService" id="itemService"/>
+	<dubbo:reference interface="cn.e3mall.service.ItemCatService" id="itemCatService"/>
 
 	
 </beans>
