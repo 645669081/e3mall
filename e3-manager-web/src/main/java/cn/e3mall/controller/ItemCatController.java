@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import cn.e3mall.common.TreeNode;
+import cn.e3mall.common.pojo.TreeNode;
 import cn.e3mall.service.ItemCatService;
 
 /**
