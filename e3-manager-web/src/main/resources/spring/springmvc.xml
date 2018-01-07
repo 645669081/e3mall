@@ -30,6 +30,10 @@
 	<dubbo:registry protocol="zookeeper" address="192.168.25.128:2181"/>
 	<dubbo:reference interface="cn.e3mall.service.ItemService" id="itemService"/>
 	<dubbo:reference interface="cn.e3mall.service.ItemCatService" id="itemCatService"/>
+	<dubbo:reference interface="cn.e3mall.content.service.ContentCategoryService" id="contentCategoryService"/>
+	<dubbo:reference interface="cn.e3mall.content.service.ContentService" id="contentService"/>
+	<dubbo:reference interface="cn.e3mall.search.service.SearchItemService" id="searchItemService"/>
+	
 
 	<!-- 定义文件上传解析器 -->
 	<bean id="multipartResolver"

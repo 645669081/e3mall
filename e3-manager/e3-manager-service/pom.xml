@@ -10,6 +10,11 @@
   
   
   <dependencies>
+    <!-- activeMQ -->
+    <dependency>
+		<groupId>org.apache.activemq</groupId>
+		<artifactId>activemq-all</artifactId>
+	</dependency>
   	<!-- dubbo相关 -->
 	<dependency>
 		<groupId>com.alibaba</groupId>

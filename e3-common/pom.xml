@@ -8,10 +8,16 @@
   <groupId>cn.e3mall</groupId>
   <artifactId>e3-common</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  
+
   
   
   <dependencies>
+	  <!-- Redis客户端 -->
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<version>${jedis.version}</version>
+		</dependency>
 		<!-- 时间操作组件 -->
 		<dependency>
 			<groupId>joda-time</groupId>

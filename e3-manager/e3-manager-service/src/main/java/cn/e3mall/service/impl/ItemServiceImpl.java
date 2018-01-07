@@ -3,7 +3,18 @@ package cn.e3mall.service.impl;
 import java.util.Date;
 import java.util.List;
 
+import javax.annotation.Resource;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.core.MessageCreator;
 import org.springframework.stereotype.Service;
 
 import com.github.pagehelper.PageHelper;
@@ -12,6 +23,8 @@ import com.github.pagehelper.PageInfo;
 import cn.e3mall.common.pojo.DataGridResult;
 import cn.e3mall.common.utils.E3Result;
 import cn.e3mall.common.utils.IDUtils;
+import cn.e3mall.common.utils.JsonUtils;
+import cn.e3mall.jedis.JedisClient;
 import cn.e3mall.mapper.TbItemDescMapper;
 import cn.e3mall.mapper.TbItemMapper;
 import cn.e3mall.pojo.TbItem;
@@ -33,9 +46,50 @@ public class ItemServiceImpl implements ItemService {
 	@Autowired
 	private TbItemDescMapper itemDescMapper;
 	
+	
+	@Autowired
+	private JedisClient jedisClient;
+	
+	@Value("${ITEM_INFO}")
+	private String ITEM_INFO;
+	
+	@Value("${ITEM_EXPIRE}")
+	private Integer ITEM_EXPIRE;
+	
+	@Autowired
+	private JmsTemplate jmsTemplate;
+	
+	@Resource(name="itemAddTopic")
+	private Destination destination;
+	
 	@Override
 	public TbItem getItemById(long id) {
-		return itemMapper.selectByPrimaryKey(id);
+		//先去查询缓存
+		try{
+			String json = jedisClient.get(ITEM_INFO+":"+id+":BASE");
+			if(StringUtils.isNotBlank(json)){
+				TbItem jsonToPojo = JsonUtils.jsonToPojo(json, TbItem.class);
+				System.out.println("缓存中拿取了商品信息");
+				return jsonToPojo;
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		
+		TbItem tbItem = itemMapper.selectByPrimaryKey(id);
+		
+		//将数据库查询的数据添加到缓存
+		try{
+			jedisClient.set(ITEM_INFO+":"+id+":BASE", JsonUtils.objectToJson(tbItem));
+			//设置过期时间来解决查询热点问题
+			jedisClient.expire(ITEM_INFO+":"+id+":BASE", ITEM_EXPIRE);
+			System.out.println("向缓存添加了商品信息");
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		return tbItem;
 	}
 
 	@Override
@@ -64,7 +118,7 @@ public class ItemServiceImpl implements ItemService {
 	@Override
 	public E3Result addItem(TbItem item, String desc) {
 		//设置商品id 
-		long id = IDUtils.genItemId();
+		final long id = IDUtils.genItemId();
 		item.setId(id);
 		
 		
@@ -89,8 +143,46 @@ public class ItemServiceImpl implements ItemService {
 		
 		itemDescMapper.insert(itemDesc);
 		
+		//添加消息队列告知添加了商品，通知其更新索引库,传递商品id即可
+		jmsTemplate.send(destination, new MessageCreator() {
+			
+			@Override
+			public Message createMessage(Session session) throws JMSException {
+				TextMessage textMessage = session.createTextMessage(id+"");
+				return textMessage;
+			}
+		});
 		
 		return E3Result.ok();
+	}
+
+	@Override
+	public TbItemDesc getItemDescById(long itemId) {
+		//先去查询缓存
+		try{
+			String json = jedisClient.get(ITEM_INFO+":"+itemId+":DESC");
+			if(StringUtils.isNotBlank(json)){
+				TbItemDesc jsonToPojo = JsonUtils.jsonToPojo(json, TbItemDesc.class);
+				System.out.println("缓存中拿取了商品描述信息");
+				return jsonToPojo;
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	
+		TbItemDesc tbItemDesc = itemDescMapper.selectByPrimaryKey(itemId);
+		
+		//将数据库查询的数据添加到缓存
+		try{
+			jedisClient.set(ITEM_INFO+":"+itemId+":DESC", JsonUtils.objectToJson(tbItemDesc));
+			//设置过期时间来解决查询热点问题
+			jedisClient.expire(ITEM_INFO+":"+itemId+":DESC", ITEM_EXPIRE);
+			System.out.println("向缓存中加入商品描述信息");
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		return tbItemDesc;
 	}
 	
 	
