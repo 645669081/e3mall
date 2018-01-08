@@ -12,6 +12,11 @@
   
   
   <dependencies>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
 	  <!-- Redis客户端 -->
 		<dependency>
 			<groupId>redis.clients</groupId>
