@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -27,6 +28,9 @@ public class UserController {
 	
 	@Value("${COOKIE_TOKEN_KEY}")
 	private String COOKIE_TOKEN_KEY;
+	
+	@Value("${COOkIE_TOKEN_MAXAGE}")
+	private int COOkIE_TOKEN_MAXAGE;
 	
 	@RequestMapping("/user/check/{data}/{type}")
 	@ResponseBody
@@ -51,7 +55,8 @@ public class UserController {
 	
 	
 	@RequestMapping("/page/login")
-	public String showLogin(){
+	public String showLogin(String url,Model model){
+		model.addAttribute("redirect", url);
 		return "login";
 	}
 	
@@ -66,9 +71,8 @@ public class UserController {
 		}
 		
 		String token = result.getData().toString();
-		//将token写入cookie
-		CookieUtils.setCookie(request, response, COOKIE_TOKEN_KEY, token);
-		
+		//将token写入cookie,并设置时长，查看京东关闭浏览器后并未失效
+		CookieUtils.setCookie(request, response, COOKIE_TOKEN_KEY, token, COOkIE_TOKEN_MAXAGE);
 		return result;
 	}
 	
